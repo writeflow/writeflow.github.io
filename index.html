@@ -95,11 +95,13 @@ const stats = document.querySelector('.stats');
 var startDate = Date.now();
 var totalTime = parseInt(window.localStorage.getItem('totalTime') || '0', 10);
 textarea.value = window.localStorage.getItem('text') || '';
-var firstClick = true;
+var clickthrough = 0;
 
 const prevent = event => event.preventDefault();
 function immersive(event) {
-  event.preventDefault();
+  if (clickthrough --< 0) {
+    event.preventDefault();
+  }
   textarea.blur();
   setTimeout(() => {
     textarea.focus();
@@ -169,6 +171,7 @@ function reset() {
     totalTime = 0;
     save();
     updateStats();
+    clickthrough = 2;
   }
 }
 
