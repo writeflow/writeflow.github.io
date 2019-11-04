@@ -73,14 +73,14 @@ textarea {
 }
 </style>
 
-<body onclick="immersive()">
+<body>
 <div class="maxWidth">
   <div class="controls">
     <div class="stats"></div>
     <div class="copy button" onclick="copy()">Copy</div>
     <div class="reset button" onclick="reset()">Reset</div>
   </div>
-  <textarea disabled="true" ontouchstart="beginEdit(event)" onclick="beginEdit(event)"></textarea>
+  <textarea ontouchstart="immersive(event)" onmousedown="immersive(event)"></textarea>
 </div>
 
 <script>
@@ -93,11 +93,15 @@ textarea.value = window.localStorage.getItem('text') || '';
 var firstClick = true;
 
 const prevent = event => event.preventDefault();
-function beginEdit(event) {
-  document.body.requestFullscreen();
+function immersive(event) {
   event.preventDefault();
   textarea.blur();
-  setTimeout(() => textarea.focus(), 10);
+  setTimeout(() => {
+    textarea.focus();
+    selectEnd();
+  }, 10);
+  document.body.requestFullscreen();
+  wakelock();
 };
 
 textarea.addEventListener('selectstart', prevent);
@@ -124,7 +128,6 @@ textarea.addEventListener('keydown', event => {
 document.addEventListener('fullscreenchange', e => {
   const fullScreen = document.fullscreenElement !== null;
   document.body.classList.toggle('fullscreen', fullScreen);
-  textarea.disabled = fullScreen ? '' : 'true';
 });
 
 function save() {
@@ -141,14 +144,17 @@ updateStats();
 setInterval(updateStats, 60 * 1000);
 
 function copy() {
-  textarea.disabled = '';
   textarea.classList.add('noHighlight');
   textarea.select();
   document.execCommand('copy');
+  selectEnd();
+  textarea.classList.remove('noHighlight');
+  textarea.blur();
+}
+
+function selectEnd() {
   const end = textarea.value.length
   textarea.setSelectionRange(end, end);
-  textarea.classList.remove('noHighlight');
-  textarea.disabled = 'true';
 }
 
 function reset() {
@@ -157,11 +163,12 @@ function reset() {
     startDate = Date.now();
     totalTime = 0;
     save();
+    updateStats();
   }
 }
 
 var wakelockVideo = undefined;
-function immersive() {
+function wakelock() {
   if (!wakelockVideo) {
     wakelockVideo = document.createElement('video');
     wakelockVideo.setAttribute('playsinline', '');
